@@ -7,7 +7,7 @@
 #include <iostream> 
 #include <fstream>
 #include <algorithm> 
-#include <Eigen/Eigen>
+#include <Eigen/Eigen> // 线代、矩阵、向量计算库
 #include <chrono>
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/odometry.hpp"
@@ -28,8 +28,9 @@ class PurePursuit : public rclcpp::Node {
 
 public:
     PurePursuit() : Node("pure_pursuit_node") {
-        // initialise parameters
-        this->declare_parameter("waypoints_path", "/sim_ws/src/pure_pursuit/racelines/e7_floor5.csv");
+        // 运行到初始化列表后，进入函数主体，对像的数据成员已经初始化，可以使用this指针；
+        // initialise parameters; ROS2 节点内，进行参数声明，也可以在yaml中进行设置参数
+        this->declare_parameter("waypoints_path", "/sim_ws/src/pure_pursuit/racelines/e7_floor5.csv");  // 当继承的父类是模板类时，在调用父类成员时，需要利用this指针调用父类成员；也可以使用父类名称-Base::（一般在第二阶段编译）
         this->declare_parameter("odom_topic", "/ego_racecar/odom");
         this->declare_parameter("car_refFrame", "ego_racecar/base_link");
         this->declare_parameter("drive_topic", "/drive");
@@ -42,7 +43,7 @@ public:
         this->declare_parameter("steering_limit", 25.0);
         this->declare_parameter("velocity_percentage", 0.6);
         
-        // Default Values
+        // Default Values；获取对应声明的参数值，赋值给变量；
         waypoints_path = this->get_parameter("waypoints_path").as_string();
         odom_topic = this->get_parameter("odom_topic").as_string();
         car_refFrame = this->get_parameter("car_refFrame").as_string();
@@ -57,8 +58,8 @@ public:
         velocity_percentage =  this->get_parameter("velocity_percentage").as_double();
         
         //initialise subscriber sharedptr obj
-        subscription_odom = this->create_subscription<nav_msgs::msg::Odometry>(odom_topic, 25, std::bind(&PurePursuit::odom_callback, this, _1));
-        timer_ = this->create_wall_timer(2000ms, std::bind(&PurePursuit::timer_callback, this));
+        subscription_odom = this->create_subscription<nav_msgs::msg::Odometry>(odom_topic, 25, std::bind(&PurePursuit::odom_callback, this, _1));  // 订阅话题的缓冲池长度设置为25，订阅消息初始化，并绑定回调函数进行循迹计算
+        timer_ = this->create_wall_timer(2000ms, std::bind(&PurePursuit::timer_callback, this));    // 初始化定时器，2000ms，直行一次回调
 
         //initialise publisher sharedptr obj
         publisher_drive = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>(drive_topic, 25);
@@ -69,7 +70,7 @@ public:
         tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
         transform_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
-        RCLCPP_INFO (this->get_logger(), "this node has been launched");
+        RCLCPP_INFO (this->get_logger(), "this node has been launched");   // RCLCPP_INFO是一个宏，和ros_info类似在终端打印消息
 
         download_waypoints();
 
