@@ -171,7 +171,7 @@ private:
         std::string line, word, temp;
 
         while (!csvFile_waypoints.eof()) {
-            std::getline(csvFile_waypoints, line, '\n');
+            std::getline(csvFile_waypoints, line, '\n');  // 从输入数据csvFile_waypoints中，按照‘/n’作为分隔符，转换为字符串line；
             std::stringstream s(line); 
 
             int j = 0;
@@ -227,7 +227,7 @@ private:
         int start = waypoints.index;
         int end = (waypoints.index + 500) % num_waypoints;
         
-        // Lookahead needs to be between the min_lookhead and the max_lookahead
+        // Lookahead needs to be between the min_lookhead and the max_lookahead；计算预瞄距离，并据此寻找最远点；
         double lookahead = std::min(std::max(min_lookahead, max_lookahead * curr_velocity / lookahead_ratio), max_lookahead); 
         
         
@@ -268,7 +268,7 @@ private:
             }
         }
         
-        // Find the closest point to the car, and use the velocity index for that
+        // Find the closest point to the car, and use the velocity index for that;最近点
         double shortest_distance = p2pdist(waypoints.X[0], x_car_world, waypoints.Y[0], y_car_world);
         int velocity_i = 0;
         for (int i=0; i<waypoints.X.size(); i++) {
@@ -337,10 +337,11 @@ private:
 
         waypoints.p1_car = (rotation_m*waypoints.p1_world) + translation_v;
     }
-
+    //  循迹跟踪算法：车身坐标系-前-左-上
     double p_controller() { // pass waypoint
         double r = waypoints.p1_car.norm(); // r = sqrt(x^2 + y^2)
         double y = waypoints.p1_car(1);
+        // 角度 = K_p*曲率；依据：tan(角度)=轴距/转弯半径=轴距*曲率；
         double angle = K_p * 2 * y / pow(r, 2); // Calculated from https://docs.google.com/presentation/d/1jpnlQ7ysygTPCi8dmyZjooqzxNXWqMgO31ZhcOlKVOE/edit#slide=id.g63d5f5680f_0_33
 
         return angle;
@@ -387,7 +388,7 @@ private:
     void odom_callback(const nav_msgs::msg::Odometry::ConstSharedPtr odom_submsgObj) {
         x_car_world = odom_submsgObj->pose.pose.position.x;
         y_car_world = odom_submsgObj->pose.pose.position.y;
-        // interpolate between different way-points 
+        // interpolate between different way-points ；找到最近匹配点和预瞄点
         get_waypoint();
         // Lane switching implementation
         get_waypoint_obstacle_avoidance();
